@@ -31,9 +31,9 @@ async function sendReceipt(orderId: string): Promise<void> {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { provider: string } }
+  { params }: { params: Promise<{ provider: string }> }
 ): Promise<NextResponse> {
-  const { provider } = params;
+  const { provider } = await params;
 
   try {
     if (provider === "yoco") {
