@@ -7,6 +7,7 @@ import {
   getOrCreateCustomer,
 } from "@/lib/db/supabase";
 import { sendMessage } from "@/lib/whatsapp/client";
+import { createPayment } from "@/lib/payments";
 
 // In-memory store for onboarding conversations (use Redis/DB in production)
 const onboardingState = new Map<
@@ -135,4 +136,36 @@ async function handleOnboarding(
   }
 
   onboardingState.set(fromNumber, state);
+}
+
+/**
+ * Generates a payment link for a confirmed order and sends it to the customer
+ * via WhatsApp. Call this after an order is created and confirmed.
+ *
+ * TODO: Integrate this into the order confirmation flow once Order records are
+ * created from the bot processor (currently Claude handles responses in-memory).
+ */
+export async function sendPaymentLink(
+  customerPhone: string,
+  orderId: string,
+  amount: number,
+  description: string,
+  provider: "yoco" | "ozow" | "payfast",
+  language: string
+): Promise<void> {
+  const result = await createPayment({
+    orderId,
+    amount,
+    customerName: "",
+    customerPhone,
+    description,
+    provider,
+  });
+
+  const lang = language as Parameters<typeof translateFromEnglish>[1];
+  const message = await translateFromEnglish(
+    `💳 To complete your order, please pay here: ${result.paymentUrl}`,
+    lang
+  );
+  await sendMessage(customerPhone, message);
 }

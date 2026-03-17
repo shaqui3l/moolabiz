@@ -98,6 +98,7 @@ export default function LandingPage() {
         </div>
         <div className="hidden md:flex gap-6 text-sm text-gray-600">
           <a href="#features" className="hover:text-brand-dark transition-colors">Features</a>
+          <a href="#payments" className="hover:text-brand-dark transition-colors">Payments</a>
           <a href="#pricing" className="hover:text-brand-dark transition-colors">Pricing</a>
           <a href="#testimonials" className="hover:text-brand-dark transition-colors">Stories</a>
         </div>
@@ -214,6 +215,72 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Payments ───────────────────────────────────────── */}
+      <section id="payments" className="py-20 px-6 bg-gray-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-brand-green/10 text-brand-dark text-xs font-semibold px-3 py-1 rounded-full mb-4">
+            💳 Built-in payments
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Get Paid Instantly
+          </h2>
+          <p className="text-gray-500 max-w-xl mx-auto mb-12">
+            Accept card payments, instant EFT, and SnapScan — your customers
+            pay from WhatsApp in seconds. The payment link is sent automatically
+            when an order is confirmed.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            {[
+              {
+                name: "Yoco",
+                icon: "💳",
+                color: "border-blue-200 bg-blue-50",
+                tagColor: "text-blue-700 bg-blue-100",
+                tag: "Card Payments",
+                desc: "Fast, secure card payments trusted by thousands of SA businesses.",
+              },
+              {
+                name: "Ozow",
+                icon: "🏦",
+                color: "border-purple-200 bg-purple-50",
+                tagColor: "text-purple-700 bg-purple-100",
+                tag: "Instant EFT",
+                desc: "No card needed — perfect for township customers banking with any SA bank.",
+              },
+              {
+                name: "PayFast",
+                icon: "⚡",
+                color: "border-orange-200 bg-orange-50",
+                tagColor: "text-orange-700 bg-orange-100",
+                tag: "Card · EFT · SnapScan",
+                desc: "South Africa's most versatile gateway — card, EFT and SnapScan in one.",
+              },
+            ].map((p) => (
+              <div
+                key={p.name}
+                className={`rounded-2xl border-2 ${p.color} p-6 text-left`}
+              >
+                <div className="text-4xl mb-3">{p.icon}</div>
+                <h3 className="font-bold text-gray-900 text-xl mb-1">{p.name}</h3>
+                <span
+                  className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-3 ${p.tagColor}`}
+                >
+                  {p.tag}
+                </span>
+                <p className="text-gray-500 text-sm leading-relaxed">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-10 text-sm text-gray-400">
+            Payment integration available on the{" "}
+            <a href="#pricing" className="text-brand-dark underline font-medium">
+              Growth plan
+            </a>
+            .
+          </p>
         </div>
       </section>
 

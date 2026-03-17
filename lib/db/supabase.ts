@@ -30,6 +30,7 @@ export interface Business {
   products: Array<{ name: string; price: number }>;
   hours: string;
   plan: "basic" | "growth";
+  payment_provider?: "yoco" | "ozow" | "payfast";
   created_at: string;
 }
 
@@ -50,6 +51,9 @@ export interface Order {
   total: number;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   payment_status: "unpaid" | "paid";
+  payment_provider?: string;
+  payment_link?: string;
+  payment_reference?: string;
   created_at: string;
 }
 
@@ -154,6 +158,22 @@ export async function updateOrderStatus(
   const update: Partial<Order> = { status };
   if (paymentStatus) update.payment_status = paymentStatus;
   await supabase.from("orders").update(update).eq("id", orderId);
+}
+
+export async function savePaymentDetails(
+  orderId: string,
+  provider: string,
+  link: string,
+  reference: string
+): Promise<void> {
+  await supabase
+    .from("orders")
+    .update({
+      payment_provider: provider,
+      payment_link: link,
+      payment_reference: reference,
+    })
+    .eq("id", orderId);
 }
 
 // ─── Appointment helpers ─────────────────────────────────────────────────────
