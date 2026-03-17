@@ -1,7 +1,7 @@
 # MoolaBiz 💰
 
 > 24/7 WhatsApp business bot platform for African informal traders.  
-> AI-powered in Zulu, Xhosa, Afrikaans, Sesotho & English via Lelapa AI (VulaVula), with optional OpenAI-compatible providers (e.g. Azure OpenAI / GitHub Models) for MVP cost control.  
+> AI-powered in Zulu, Xhosa, Afrikaans, Sesotho & English via Lelapa AI (VulaVula), with optional OpenAI-compatible providers (e.g. Azure OpenAI / GitHub Models) for cost-effective flexibility.  
 > Instant payments via Yoco, Ozow and PayFast — customers pay without leaving WhatsApp.
 
 ---
