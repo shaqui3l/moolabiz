@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getBusinessStats, supabase } from "@/lib/db/supabase";
 import type { Business } from "@/lib/db/supabase";
+import AdvocatePanel from "./AdvocatePanel";
 
 function checkAuth(authHeader: string | null): boolean {
   if (!authHeader || !authHeader.startsWith("Basic ")) return false;
@@ -119,6 +120,8 @@ export default async function DashboardPage() {
             </table>
           </div>
         </div>
+
+        <AdvocatePanel businesses={bizList} />
       </main>
     </div>
   );

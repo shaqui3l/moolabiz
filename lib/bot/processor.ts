@@ -1,5 +1,6 @@
 import { detectLanguage, translateToEnglish, translateFromEnglish } from "@/lib/ai/lelapa";
 import { processMessage, extractBusinessSetup, MessageContext } from "@/lib/ai/claude";
+import { runDevilsAdvocate } from "@/lib/ai/devil";
 import {
   getBusinessByWhatsApp,
   upsertBusiness,
@@ -92,13 +93,14 @@ async function handleOnboarding(
     case "done": {
       // Extract structured data from the full transcript
       const extracted = await extractBusinessSetup(state.transcript);
-      await upsertBusiness({
+      const profile = {
         whatsapp_number: fromNumber,
         name: extracted.businessName ?? "My Business",
         products: extracted.products ?? [],
         hours: extracted.hours ?? "Mon-Fri 9am-5pm",
-        plan: "basic",
-      });
+        plan: "basic" as const,
+      };
+      await upsertBusiness(profile);
       onboardingState.delete(fromNumber);
 
       const reply = await translateFromEnglish(
@@ -106,6 +108,28 @@ async function handleOnboarding(
         lang
       );
       await sendMessage(fromNumber, reply);
+
+      // Run devil's advocate in the background and send a follow-up
+      runDevilsAdvocate(profile)
+        .then(async (report) => {
+          const topChallenge = report.challenges[0];
+          const topBlindSpot = report.blindSpots[0];
+
+          const followUp =
+            `🤔 *Devil's Advocate Check*\n\n` +
+            `I've done a quick stress-test of your setup. Here's what to think about:\n\n` +
+            `⚠️ ${topChallenge?.issue ?? "Review your pricing strategy."}\n\n` +
+            `💡 ${topBlindSpot ?? "Consider who your direct competitors are."}\n\n` +
+            `❓ ${report.provokeQuestion}\n\n` +
+            `Reply "FULL REVIEW" to get the complete analysis.`;
+
+          const localFollowUp = await translateFromEnglish(followUp, lang);
+          await sendMessage(fromNumber, localFollowUp);
+        })
+        .catch((err: unknown) => {
+          console.error("[devil's advocate] follow-up message failed:", err);
+        });
+
       return;
     }
   }
