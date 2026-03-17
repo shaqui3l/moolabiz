@@ -1,7 +1,7 @@
 # MoolaBiz 💰
 
 > 24/7 WhatsApp business bot platform for African informal traders.  
-> AI-powered in Zulu, Xhosa, Afrikaans, Sesotho & English via Lelapa AI (VulaVula).  
+> AI-powered in Zulu, Xhosa, Afrikaans, Sesotho & English via Lelapa AI (VulaVula), with optional OpenAI-compatible providers (e.g. Azure OpenAI / GitHub Models) for MVP cost control.  
 > Instant payments via Yoco, Ozow and PayFast — customers pay without leaving WhatsApp.
 
 ---
@@ -17,7 +17,7 @@ MoolaBiz gives informal traders (spaza shops, hair braiders, tailors, food selle
 | Feature | Description |
 |---|---|
 | 🤖 **24/7 Bot** | Responds to customers on WhatsApp while the owner sleeps |
-| 🌍 **African Languages** | Auto-detects and replies in Zulu, Xhosa, Afrikaans, Sesotho & English via Lelapa AI (VulaVula) |
+| 🌍 **African Languages** | Auto-detects and replies in Zulu, Xhosa, Afrikaans, Sesotho & English via Lelapa AI (VulaVula), or an OpenAI-compatible endpoint |
 | 📦 **Order Management** | Customers browse, order and pay — all inside WhatsApp |
 | 📅 **Appointments** | Booking, confirmations and 2-hour reminders sent automatically |
 | 💳 **Instant Payments** | Sends Yoco, Ozow or PayFast payment links on order confirmation — customer pays in seconds |
@@ -34,7 +34,7 @@ MoolaBiz gives informal traders (spaza shops, hair braiders, tailors, food selle
 | Framework | [Next.js 15](https://nextjs.org/) (App Router, TypeScript) |
 | Styling | Tailwind CSS |
 | AI Reasoning | [Anthropic Claude](https://www.anthropic.com/) (claude-3-5-haiku) |
-| African Language AI | [Lelapa AI – VulaVula](https://lelapa.ai/) |
+| African Language AI | [Lelapa AI – VulaVula](https://lelapa.ai/) or OpenAI-compatible endpoint (e.g. Azure OpenAI / GitHub Models) |
 | Database | [Supabase](https://supabase.com/) (Postgres + RLS) |
 | Messaging | [WhatsApp Business Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api) (Meta) |
 | Payments | [Yoco](https://developer.yoco.com/) · [Ozow](https://docs.ozow.com/) · [PayFast](https://developers.payfast.co.za/) |
@@ -93,7 +93,7 @@ supabase/
 - A [Supabase](https://supabase.com/) project
 - [Meta WhatsApp Business Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api) access
 - [Anthropic](https://www.anthropic.com/) API key
-- [Lelapa AI](https://lelapa.ai/) API key
+- Either [Lelapa AI](https://lelapa.ai/) API key, or an OpenAI-compatible language endpoint (e.g. Azure OpenAI / GitHub Models)
 - At least one payment provider: [Yoco](https://developer.yoco.com/), [Ozow](https://docs.ozow.com/) or [PayFast](https://developers.payfast.co.za/)
 
 ### 2. Install dependencies
@@ -133,7 +133,11 @@ npx ngrok http 3000
 | Variable | Description |
 |---|---|
 | `ANTHROPIC_API_KEY` | Anthropic Claude API key |
+| `LANGUAGE_AI_PROVIDER` | `lelapa` (default) or `openai_compatible` |
 | `LELAPA_API_KEY` | Lelapa AI VulaVula API key |
+| `OPENAI_COMPAT_BASE_URL` | OpenAI-compatible base URL for language tasks (Azure OpenAI / GitHub Models, etc.) |
+| `OPENAI_COMPAT_API_KEY` | API key/token for OpenAI-compatible language endpoint |
+| `OPENAI_COMPAT_MODEL` | Model name for OpenAI-compatible language endpoint (default `gpt-4o-mini`) |
 | `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp Cloud API access token |
 | `WHATSAPP_PHONE_NUMBER_ID` | Meta phone number ID |
 | `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Secret token for webhook verification |
