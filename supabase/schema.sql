@@ -70,6 +70,8 @@ alter table appointments  enable row level security;
 alter table orders add column if not exists payment_provider  text;
 alter table orders add column if not exists payment_link      text;
 alter table orders add column if not exists payment_reference text;
+-- Yoco Payment Links API returns a separate order_id used for status polling
+alter table orders add column if not exists yoco_order_id     text;
 
 alter table businesses add column if not exists payment_provider text
   check (payment_provider in ('yoco', 'ozow', 'payfast'));

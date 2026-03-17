@@ -5,9 +5,13 @@ import {
   getBusinessByWhatsApp,
   upsertBusiness,
   getOrCreateCustomer,
+  updateOrderStatus,
+  savePaymentDetails,
+  supabase,
 } from "@/lib/db/supabase";
+import type { Order } from "@/lib/db/supabase";
 import { sendMessage } from "@/lib/whatsapp/client";
-import { createPayment } from "@/lib/payments";
+import { createPayment, checkYocoOrderStatus } from "@/lib/payments";
 
 // In-memory store for onboarding conversations (use Redis/DB in production)
 const onboardingState = new Map<
@@ -45,6 +49,29 @@ export async function handleIncomingMessage(
     hours: business.hours,
     language: lang,
   };
+
+  // Check if the customer is asking about payment status
+  const normalised = englishText.trim().toUpperCase();
+  if (normalised === "PAID?" || normalised === "CHECK PAYMENT" || normalised === "PAYMENT STATUS") {
+    // Look up the customer's most recent unpaid order for this business
+    const customer = await getOrCreateCustomer(fromNumber, business.id);
+    if (customer) {
+      const { data: latestOrder } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("business_id", business.id)
+        .eq("customer_id", customer.id)
+        .eq("payment_status", "unpaid")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (latestOrder) {
+        await checkAndConfirmPayment(fromNumber, (latestOrder as { id: string }).id, lang);
+        return;
+      }
+    }
+  }
 
   const englishReply = await processMessage(englishText, context);
   const localReply = await translateFromEnglish(englishReply, lang);
@@ -142,8 +169,8 @@ async function handleOnboarding(
  * Generates a payment link for a confirmed order and sends it to the customer
  * via WhatsApp. Call this after an order is created and confirmed.
  *
- * TODO: Integrate this into the order confirmation flow once Order records are
- * created from the bot processor (currently Claude handles responses in-memory).
+ * The Yoco `order_id` is persisted so that `checkAndConfirmPayment` can poll
+ * the Orders API later to confirm payment status.
  */
 export async function sendPaymentLink(
   customerPhone: string,
@@ -162,10 +189,101 @@ export async function sendPaymentLink(
     provider,
   });
 
+  // Persist the payment details (incl. Yoco order_id for status polling)
+  await savePaymentDetails(
+    orderId,
+    result.provider,
+    result.paymentUrl,
+    result.paymentReference,
+    result.yocoOrderId
+  );
+
   const lang = language as Parameters<typeof translateFromEnglish>[1];
   const message = await translateFromEnglish(
     `💳 To complete your order, please pay here: ${result.paymentUrl}`,
     lang
   );
   await sendMessage(customerPhone, message);
+}
+
+/**
+ * Checks whether a Yoco payment has been completed and notifies the customer.
+ *
+ * For Yoco: polls GET /v1/orders/{yoco_order_id} for state "completed".
+ * For Ozow / PayFast: payment is confirmed via webhook — no polling needed.
+ *
+ * Intended usage: call this when the customer sends "PAID?" or "CHECK PAYMENT"
+ * in the WhatsApp conversation, or from a periodic cron job.
+ */
+export async function checkAndConfirmPayment(
+  customerPhone: string,
+  orderId: string,
+  language: string
+): Promise<void> {
+  const lang = language as Parameters<typeof translateFromEnglish>[1];
+
+  const { data: orderData } = await supabase
+    .from("orders")
+    .select("payment_status, payment_provider, yoco_order_id")
+    .eq("id", orderId)
+    .single();
+
+  if (!orderData) {
+    await sendMessage(
+      customerPhone,
+      await translateFromEnglish("❌ Order not found. Please contact the business.", lang)
+    );
+    return;
+  }
+
+  const order = orderData as Pick<Order, "payment_status" | "payment_provider" | "yoco_order_id">;
+
+  // Already confirmed (e.g. via webhook)
+  if (order.payment_status === "paid") {
+    const msg = await translateFromEnglish(
+      "✅ Your payment has been received! Your order is confirmed. We'll be in touch shortly.",
+      lang
+    );
+    await sendMessage(customerPhone, msg);
+    return;
+  }
+
+  // For Yoco: poll the Orders API
+  if (order.payment_provider === "yoco" && order.yoco_order_id) {
+    const state = await checkYocoOrderStatus(order.yoco_order_id);
+
+    if (state === "completed") {
+      await updateOrderStatus(orderId, "confirmed", "paid");
+      const msg = await translateFromEnglish(
+        "✅ Payment confirmed! Your order is confirmed. We'll be in touch shortly.",
+        lang
+      );
+      await sendMessage(customerPhone, msg);
+      return;
+    }
+
+    if (state === "cancelled") {
+      const msg = await translateFromEnglish(
+        "❌ Your payment was cancelled. Please try again or contact the business.",
+        lang
+      );
+      await sendMessage(customerPhone, msg);
+      return;
+    }
+
+    // Still "open"
+    const msg = await translateFromEnglish(
+      "⏳ We haven't received your payment yet. Please complete the payment using the link we sent.",
+      lang
+    );
+    await sendMessage(customerPhone, msg);
+    return;
+  }
+
+  // Ozow / PayFast are confirmed via webhook — just report current status
+  const msg = await translateFromEnglish(
+    "⏳ Payment not yet received. If you've already paid, please wait a moment and try again.",
+    lang
+  );
+  await sendMessage(customerPhone, msg);
 }

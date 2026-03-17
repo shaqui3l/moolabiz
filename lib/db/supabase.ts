@@ -54,6 +54,8 @@ export interface Order {
   payment_provider?: string;
   payment_link?: string;
   payment_reference?: string;
+  /** Yoco-specific: the order_id returned by the Payment Links API, used for status polling */
+  yoco_order_id?: string;
   created_at: string;
 }
 
@@ -164,16 +166,17 @@ export async function savePaymentDetails(
   orderId: string,
   provider: string,
   link: string,
-  reference: string
+  reference: string,
+  yocoOrderId?: string
 ): Promise<void> {
-  await supabase
-    .from("orders")
-    .update({
-      payment_provider: provider,
-      payment_link: link,
-      payment_reference: reference,
-    })
-    .eq("id", orderId);
+  const update: Partial<Order> = {
+    payment_provider: provider,
+    payment_link: link,
+    payment_reference: reference,
+  };
+  if (yocoOrderId) update.yoco_order_id = yocoOrderId;
+
+  await supabase.from("orders").update(update).eq("id", orderId);
 }
 
 // ─── Appointment helpers ─────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
-export type { PaymentProvider, CreatePaymentParams, PaymentResult } from "./types";
+export type { PaymentProvider, CreatePaymentParams, PaymentResult, YocoOrderState } from "./types";
+export { checkYocoOrderStatus } from "./yoco";
 
 import { createYocoPayment } from "./yoco";
 import { createOzowPayment } from "./ozow";

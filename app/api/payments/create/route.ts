@@ -57,13 +57,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       orderId,
       result.provider,
       result.paymentUrl,
-      result.paymentReference
+      result.paymentReference,
+      result.yocoOrderId
     );
 
     return NextResponse.json({
       paymentUrl: result.paymentUrl,
       paymentReference: result.paymentReference,
       provider: result.provider,
+      ...(result.yocoOrderId ? { yocoOrderId: result.yocoOrderId } : {}),
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Payment creation failed";

@@ -11,6 +11,15 @@ export interface CreatePaymentParams {
 
 export interface PaymentResult {
   paymentUrl: string;
+  /** Provider-level reference / link ID */
   paymentReference: string;
   provider: PaymentProvider;
+  /**
+   * Yoco only — the `order_id` returned by the Payment Links API.
+   * Used to poll GET /v1/orders/{order_id} for payment status.
+   */
+  yocoOrderId?: string;
 }
+
+/** Possible states returned by GET /v1/orders/{order_id} */
+export type YocoOrderState = "open" | "completed" | "cancelled";
